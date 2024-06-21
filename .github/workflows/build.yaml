@@ -106,7 +106,7 @@ jobs:
 
       - name: Make toolchain
         id: compiletoolchain
-        continue-on-error: true
+#        continue-on-error: true
         run: make toolchain/install -j$(nproc)
 
       - name: If toolchain Error
@@ -114,7 +114,7 @@ jobs:
         run: make toolchain/install -j1 V=s
 
       - name: Build the firmware image
-        continue-on-error: true
+#        continue-on-error: true
         run: |
           let make_process=$(nproc)+1
           make -j${make_process} || make V=sc -j${make_process}
