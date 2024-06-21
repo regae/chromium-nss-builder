@@ -97,7 +97,6 @@ jobs:
 
       - name: Make toolchain
         id: compiletoolchain
-#        continue-on-error: true
         run: make toolchain/install -j$(nproc)
 
       - name: If toolchain Error
@@ -105,13 +104,12 @@ jobs:
         run: make toolchain/install -j1 V=s
 
       - name: Build the firmware image
-#        continue-on-error: true
         run: |
           let make_process=$(nproc)+1
           make -j${make_process} || make V=sc -j${make_process}
 
       - name: Package output
-        run: tar -cvf chromium-images.tar bin/targets/ipq806x/chromium
+        run: tar -cvf chromium-images.tar bin/targets/ipq806x/chromium logs
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
