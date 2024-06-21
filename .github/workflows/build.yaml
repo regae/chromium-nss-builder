@@ -26,6 +26,7 @@ jobs:
       latest_commit_sha: ${{ steps.check_new_commits.outputs.latest_commit_sha }}
       nss_packages_repo_new_commits: ${{ steps.check_nss_packages_repo_new_commits.outputs.new_commits }}
       nss_packages_repo_latest_commit_sha: ${{ steps.check_nss_packages_repo_new_commits.outputs.latest_commit_sha }}
+
     steps:
       - name: Check for new commits
         id: check_new_commits
@@ -34,6 +35,7 @@ jobs:
           last_built_commit_sha=$(curl -sL "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'Build Commit: \K\w+' || echo '')
           echo "new_commits=$([[ "$latest_commit_sha" != "$last_built_commit_sha" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
           echo "latest_commit_sha=$latest_commit_sha" >> $GITHUB_OUTPUT
+
       - name: Check for new commits in NSS Packages Repository
         id: check_nss_packages_repo_new_commits
         run: |
@@ -47,6 +49,7 @@ jobs:
     needs: check_commits
     if: needs.check_commits.outputs.new_commits == 'true' || needs.check_commits.outputs.nss_packages_repo_new_commits == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-22.04
+
     steps:
       - name: Install dependencies
         run: |
@@ -56,21 +59,35 @@ jobs:
             gcc-multilib g++-multilib gettext git libncurses5-dev libncursesw5-dev libssl-dev \
             python3 python3-setuptools python3-distutils python3-dev python3-pyelftools \
             rsync swig unzip zlib1g-dev file wget libelf-dev subversion swig time xsltproc
+
       - name: Checkout remote repository
         uses: actions/checkout@v4
         with:
           repository: ${{ env.REMOTE_REPOSITORY }}
           ref: ${{ env.REMOTE_BRANCH }}
+
       - name: Checkout current repository
         uses: actions/checkout@v4
         with:
           path: "custom_repo"
+
       - name: Free space
         run: custom_repo/workflow-scripts/free_disk_space.sh
+
+      - name: Maximize build disk space
+        uses: easimon/maximize-build-space@master
+        with:
+          remove-dotnet: true
+          remove-android: true
+          remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
+
       - name: Update and install feeds
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
+
       - name: Apply NSS Status patch
         run: |
           mv custom_repo/patches/${{ env.NSS_STATUS_PATCH }} feeds/luci/${{ env.NSS_STATUS_PATCH }}
@@ -78,26 +95,33 @@ jobs:
           mv custom_repo/patches/openvswitch/${{ env.OVS_PATCH2 }} feeds/packages/net/openvswitch/patches/${{ env.OVS_PATCH2 }}
           cd feeds/luci
           git apply ${{ env.NSS_STATUS_PATCH }}
+
       - name: Configure firmware image
         run: |
           mv custom_repo/${{ env.CONFIG_FILE }} .config
           make defconfig -j$(nproc)
+
       - name: Download package
         run: make download -j$(nproc)
+
       - name: Make toolchain
         id: compiletoolchain
         continue-on-error: true
         run: make toolchain/install -j$(nproc)
+
       - name: If toolchain Error
         if: steps.compiletoolchain.outcome == 'failure'
         run: make toolchain/install -j1 V=s
+
       - name: Build the firmware image
         continue-on-error: true
         run: |
           let make_process=$(nproc)+1
           make -j${make_process} || make V=sc -j${make_process}
+
       - name: Package output
         run: tar -cvf chromium-images.tar bin/targets/ipq806x/chromium
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -114,10 +138,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: chromium-images
+
       - name: Extract artifacts
         run: tar xf chromium-images.tar
+
       - name: Get current date
         run: echo "RELEASE_DATE=$(date +%F)" >> $GITHUB_ENV
+
       - name: Create release
         uses: softprops/action-gh-release@master
         with:
@@ -127,6 +154,7 @@ jobs:
           body: |
             Build Commit: ${{ needs.check_commits.outputs.latest_commit_sha }}
             NSS Packages Commit: ${{ needs.check_commits.outputs.nss_packages_repo_latest_commit_sha }}
+
       - name: Clean up old releases
         uses: dev-drprasad/delete-older-releases@master
         with:
