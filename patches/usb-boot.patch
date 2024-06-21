@@ -1,0 +1,31 @@
+--- a/target/linux/ipq806x/image/chromium.mk
++++ b/target/linux/ipq806x/image/chromium.mk
+@@ -26,6 +26,14 @@ define Build/cros-vboot
+ 	@mv $@.new $@
+ endef
+ 
++define Build/cros-vboot-usb
++	$(STAGING_DIR_HOST)/bin/cros-vbutil \
++		-k $@ \
++		-c "root=/dev/sd%D%P rootwait fstools_partname_fallback_scan=1" \
++		-o $@.new
++	@mv $@.new $@
++endef
++
+ define Device/OnhubImage
+ 	KERNEL_LOADADDR = 0x44208000
+ 	SOC := qcom-ipq8064
+@@ -65,3 +73,13 @@ define Device/tplink_onhub
+ 	BOARD_NAME := tplink-onhub
+ endef
+ TARGET_DEVICES += tplink_onhub
++
++define Device/tplink_onhub-usb
++	$(call Device/OnhubImage)
++	KERNEL := kernel-bin | fit none $$(KDIR)/image-qcom-ipq8064-tplink-onhub.dtb | cros-vboot-usb
++	DEVICE_VENDOR := TP-Link
++	DEVICE_MODEL := OnHub AC1900 Cloud Router
++	DEVICE_DTS := $$(SOC)-tplink-onhub
++	BOARD_NAME := tplink-onhub
++endef
++TARGET_DEVICES += tplink_onhub-usb
