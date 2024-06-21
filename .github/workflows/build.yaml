@@ -74,15 +74,6 @@ jobs:
       - name: Free space
         run: custom_repo/workflow-scripts/free_disk_space.sh
 
-      - name: Maximize build disk space
-        uses: easimon/maximize-build-space@master
-        with:
-          remove-dotnet: true
-          remove-android: true
-          remove-haskell: true
-          remove-codeql: true
-          remove-docker-images: true
-
       - name: Update and install feeds
         run: |
           ./scripts/feeds update -a
