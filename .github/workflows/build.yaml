@@ -66,7 +66,7 @@ jobs:
         with:
           path: "custom_repo"
       - name: Free space
-        run: ./workflow-scripts/free_disk_space.sh
+        run: custom_repo/workflow-scripts/free_disk_space.sh
       - name: Update and install feeds
         run: |
           ./scripts/feeds update -a
