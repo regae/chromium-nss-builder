@@ -1,0 +1,52 @@
+diff --git a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
+index 39dc915..237ba0b 100644
+--- a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
++++ b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
+@@ -348,7 +348,9 @@ var CBIWifiFrequencyValue = form.Value.extend({
+ 				'': [ '', '-', true ],
+ 				'n': [
+ 					'HT20', '20 MHz', htmodelist.HT20,
+-					'HT40', '40 MHz', htmodelist.HT40
++					'HT40', '40 MHz', htmodelist.HT40,
++					'VHT20', '20 MHz QAM-256', htmodelist.VHT20,
++					'VHT40', '40 MHz QAM-256', htmodelist.VHT40
+ 				],
+ 				'ac': [
+ 					'VHT20', '20 MHz', htmodelist.VHT20,
+@@ -445,17 +447,6 @@ var CBIWifiFrequencyValue = form.Value.extend({
+ 
+ 		this.setValues(mode, this.modes);
+ 
+-		if (/HE20|HE40|HE80|HE160/.test(htval))
+-			mode.value = 'ax';
+-		else if (/VHT20|VHT40|VHT80|VHT160/.test(htval))
+-			mode.value = 'ac';
+-		else if (/HT20|HT40/.test(htval))
+-			mode.value = 'n';
+-		else
+-			mode.value = '';
+-
+-		this.toggleWifiMode(elem);
+-
+ 		if (hwval != null) {
+ 			this.useBandOption = false;
+ 
+@@ -472,6 +463,19 @@ var CBIWifiFrequencyValue = form.Value.extend({
+ 
+ 		this.toggleWifiBand(elem);
+ 
++		if (/HE20|HE40|HE80|HE160/.test(htval))
++			mode.value = 'ax';
++		else if (/VHT20|VHT40/.test(htval) && band.value == '2g')
++			mode.value = 'n';
++		else if (/VHT20|VHT40|VHT80|VHT160/.test(htval))
++			mode.value = 'ac';
++		else if (/HT20|HT40/.test(htval))
++			mode.value = 'n';
++		else
++			mode.value = '';
++
++		this.toggleWifiMode(elem);
++
+ 		bwdt.value = htval;
+ 		chan.value = chval || (chan.options[0] ? chan.options[0].value : 'auto');
