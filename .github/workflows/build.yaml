@@ -86,7 +86,7 @@ jobs:
           mv custom_repo/patches/openvswitch/${{ env.OVS_PATCH1 }} feeds/packages/net/openvswitch/patches/${{ env.OVS_PATCH1 }}
           cd feeds/luci
           git apply ${{ env.NSS_STATUS_PATCH }}
-          git apply ${{ env.QAM256_PATCH }}
+          patch -p1 < ${{ env.QAM256_PATCH }}
 
       - name: Configure firmware image
         run: |
