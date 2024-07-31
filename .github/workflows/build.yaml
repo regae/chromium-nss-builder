@@ -11,6 +11,7 @@ env:
   REMOTE_BRANCH: openwrt-23.05-chromium
   CONFIG_FILE: onhub.config
   NSS_STATUS_PATCH: 999-add-nss-load-to-status.patch
+  QAM256_PATCH: 999-luci-support-256QAM.patch
   OVS_PATCH1: 0009-set-master-for-vport.patch
   RELEASE_PREFIX: chromium-nss-11.4
   NSS_PACKAGES_REPOSITORY: regae/nss-packages
@@ -81,10 +82,11 @@ jobs:
       - name: Apply NSS Status patch
         run: |
           mv custom_repo/patches/${{ env.NSS_STATUS_PATCH }} feeds/luci/${{ env.NSS_STATUS_PATCH }}
+          mv custom_repo/patches/${{ env.QAM256_PATCH }} feeds/luci/${{ env.QAM256_PATCH }}
           mv custom_repo/patches/openvswitch/${{ env.OVS_PATCH1 }} feeds/packages/net/openvswitch/patches/${{ env.OVS_PATCH1 }}
           cd feeds/luci
           git apply ${{ env.NSS_STATUS_PATCH }}
-          patch -p1 < custom_repo/patches/999-luci-support-256QAM.patch
+          git apply ${{ env.QAM256_PATCH }}
 
       - name: Configure firmware image
         run: |
